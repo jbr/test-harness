@@ -6,7 +6,7 @@ of arguments and return anything, as long as you call it with the
 correct arguments in the harness.
 
 # Simple example
-```
+```rust
 use test_harness::test;
 
 fn my_test_harness<F>(test: F)
@@ -25,7 +25,7 @@ fn my_test(random_string: String) -> Result<(), &'static str> {
 
 This expands to the following, with no further macro magic.
 
-```
+```rust
 fn my_test_harness<F>(test: F)
 where F: FnOnce(String) -> Result<(), &'static str> {
     let string = std::iter::repeat_with(fastrand::alphanumeric).take(10).collect();
@@ -43,7 +43,7 @@ fn my_test() {
 ```
 
 # Async example
-```
+```rust
 use test_harness::test;
 
 mod my_mod {
