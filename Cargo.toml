@@ -1,0 +1,24 @@
+[package]
+name = "test-harness"
+version = "0.1.0"
+edition = "2021"
+authors = ["Jacob Rothstein <hi@jbr.me>"]
+description = "a little test macro to wrap your tests with an arbitrary setup/teardown function"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jbr/test-harness"
+readme = "./README.md"
+keywords = ["test", "macro", "harness", "before", "setup"]
+categories = ["development-tools::testing"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.52"
+quote = "1.0.26"
+syn = { version = "2", features = ["full"] }
+
+[dev-dependencies]
+fastrand = "1.9.0"
+futures-lite = "1.12.0"
+syn = { version = "2", features = ["extra-traits"] }
