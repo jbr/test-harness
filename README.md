@@ -1,11 +1,11 @@
 # test-harness
 
-this simple macro wraps your tests with any function that accepts a
-function with that signature. Your test function can accept any number
-of arguments and return anything, as long as you call it with the
-correct arguments in the harness.
+this proc macro wraps your tests with any function that accepts a
+function with your test's signature. Your test function can accept any
+number of arguments and return anything, as long as you call it with
+the correct arguments in the harness.
 
-# Simple example
+## Example
 ```rust
 use test_harness::test;
 
@@ -23,7 +23,7 @@ fn my_test(random_string: String) -> Result<(), &'static str> {
 ```
 
 
-This expands to the following, with no further macro magic.
+This expands to the following, with no further macro magic
 
 ```rust
 fn my_test_harness<F>(test: F)
@@ -42,7 +42,10 @@ fn my_test() {
 }
 ```
 
-# Async example
+## Async example
+
+You can use this to set up an async runtime and spawn or block on the test.
+
 ```rust
 use test_harness::test;
 
