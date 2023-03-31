@@ -1,0 +1,43 @@
+name: docs
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  docs:
+    name: build rustdocs and put them on github pages
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@master
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        components: rustfmt, clippy
+        override: true
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2.2.1
+    - name: Build Documentation
+      run: >-
+        RUSTDOCFLAGS="-Z unstable-options --enable-index-page"
+        cargo +nightly doc
+        --no-deps
+        --all
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: ./target/doc
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
