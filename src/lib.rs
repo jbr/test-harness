@@ -14,11 +14,11 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     parse::{Parse, ParseStream},
-    parse_macro_input, Expr, ExprAssign, ExprPath, ItemFn,
+    parse_macro_input, Expr, ExprAssign, ExprPath, ItemFn, Path,
 };
 
 struct Args {
-    harness: Option<syn::Path>,
+    harness: Option<Path>,
 }
 
 impl Parse for Args {
@@ -40,27 +40,36 @@ impl Parse for Args {
     }
 }
 
-/// currently only supports #[test_harness::test(harness = path::to::harness_fn)]
+/// currently supports #[test_harness::test(harness = path::to::harness_fn)] and #[test]
+/// see crate-level docs for usage and examples
 #[proc_macro_attribute]
 pub fn test(args: TokenStream, input: TokenStream) -> TokenStream {
     let Args { harness } = parse_macro_input!(args as Args);
-    let input = parse_macro_input!(input as ItemFn);
-    let fn_name = input.sig.ident.clone();
+    match harness {
+        Some(harness) => with_harness(harness, input),
+        None => without_harness(input),
+    }
+}
 
-    let ret = if let Some(harness) = harness {
-        quote! {
-            #[::core::prelude::v1::test]
-            fn #fn_name() {
-                #input
-                #harness(#fn_name);
-            }
-        }
-    } else {
-        quote! {
-            #[::core::prelude::v1::test]
+fn without_harness(input: TokenStream) -> TokenStream {
+    let input = proc_macro2::TokenStream::from(input);
+    quote! {
+        #[::core::prelude::v1::test]
+        #input
+    }
+    .into()
+}
+
+fn with_harness(harness: Path, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as ItemFn);
+    #[allow(clippy::redundant_clone)] // clippy bug
+    let fn_name = input.sig.ident.clone();
+    quote! {
+        #[::core::prelude::v1::test]
+        fn #fn_name() {
             #input
+            #harness(#fn_name);
         }
-    };
-    //    println!("{}", ret);
-    ret.into()
+    }
+    .into()
 }
