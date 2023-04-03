@@ -65,3 +65,15 @@ async fn my_test(s: &'static str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+# Drop down to standard #[test]
+
+If this macro is used without any additional arguments, it works identically to the built-in `#[test]` macro.
+
+```rust
+use test_harness::test;
+#[test]
+fn normal_test() {
+    assert!(true);
+}
+```

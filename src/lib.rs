@@ -18,17 +18,23 @@ use syn::{
 };
 
 struct Args {
-    harness: syn::Path,
+    harness: Option<syn::Path>,
 }
 
 impl Parse for Args {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        if input.is_empty() {
+            return Ok(Self { harness: None });
+        }
+
         let ExprAssign { left, right, .. } = ExprAssign::parse(input)?;
         match (*left, *right) {
             (
                 Expr::Path(ExprPath { path: left, .. }),
                 Expr::Path(ExprPath { path: harness, .. }),
-            ) if left.is_ident("harness") => Ok(Self { harness }),
+            ) if left.is_ident("harness") => Ok(Self {
+                harness: Some(harness),
+            }),
             _ => Err(input.error("we only recognize test(harness = some::path)")),
         }
     }
@@ -40,11 +46,19 @@ pub fn test(args: TokenStream, input: TokenStream) -> TokenStream {
     let Args { harness } = parse_macro_input!(args as Args);
     let input = parse_macro_input!(input as ItemFn);
     let fn_name = input.sig.ident.clone();
-    let ret = quote! {
-        #[::core::prelude::v1::test]
-        fn #fn_name() {
+
+    let ret = if let Some(harness) = harness {
+        quote! {
+            #[::core::prelude::v1::test]
+            fn #fn_name() {
+                #input
+                #harness(#fn_name);
+            }
+        }
+    } else {
+        quote! {
+            #[::core::prelude::v1::test]
             #input
-            #harness(#fn_name);
         }
     };
     //    println!("{}", ret);
