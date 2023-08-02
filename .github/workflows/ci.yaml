@@ -16,7 +16,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
     - name: Install Protoc
-      uses: arduino/setup-protoc@v1
+      uses: arduino/setup-protoc@v2
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/checkout@master
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Protoc
-      uses: arduino/setup-protoc@v1
+      uses: arduino/setup-protoc@v2
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/checkout@master
