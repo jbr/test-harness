@@ -15,10 +15,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/checkout@master
     - name: Install rust
       uses: actions-rs/toolchain@v1
@@ -38,10 +34,6 @@ jobs:
     name: Lints and Docs
     runs-on: ubuntu-latest
     steps:
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/checkout@master
     - uses: actions-rs/toolchain@v1
       with:
