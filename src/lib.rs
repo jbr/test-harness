@@ -14,7 +14,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     parse::{Parse, ParseStream},
-    parse_macro_input, Expr, ExprAssign, ExprPath, ItemFn, Path,
+    parse_macro_input, ExprPath, ItemFn, Path, Token,
 };
 
 struct Args {
@@ -27,15 +27,21 @@ impl Parse for Args {
             return Ok(Self { harness: None });
         }
 
-        let ExprAssign { left, right, .. } = ExprAssign::parse(input)?;
-        match (*left, *right) {
-            (
-                Expr::Path(ExprPath { path: left, .. }),
-                Expr::Path(ExprPath { path: harness, .. }),
-            ) if left.is_ident("harness") => Ok(Self {
-                harness: Some(harness),
-            }),
-            _ => Err(input.error("we only recognize test(harness = some::path)")),
+        let harness_ident: ExprPath = input.parse()?;
+        if !harness_ident.path.is_ident("harness") {
+            Err(input.error(
+                "we only recognize #[test(harness = some::path)], #[test(harness)], and #[test]",
+            ))
+        } else if input.peek(Token![=]) {
+            let syn::token::Eq { .. } = input.parse()?;
+            let ExprPath { path, .. } = input.parse()?;
+            Ok(Self {
+                harness: Some(path),
+            })
+        } else {
+            Ok(Self {
+                harness: Some(harness_ident.path),
+            })
         }
     }
 }
@@ -66,9 +72,9 @@ fn with_harness(harness: Path, input: TokenStream) -> TokenStream {
     let fn_name = input.sig.ident.clone();
     quote! {
         #[::core::prelude::v1::test]
-        fn #fn_name() {
+        fn #fn_name() -> impl ::std::process::Termination {
             #input
-            #harness(#fn_name);
+            #harness(#fn_name)
         }
     }
     .into()
