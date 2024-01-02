@@ -9,10 +9,44 @@ the correct arguments in the harness.
 ```rust
 use test_harness::test;
 
-fn my_test_harness<F>(test: F)
+fn my_test_harness(test: impl FnOnce(String)) {
+    let string = std::iter::repeat_with(fastrand::alphanumeric).take(10).collect();
+    test(string)
+}
+
+#[test(harness = my_test_harness)]
+fn my_test(random_string: String) {
+    assert_eq!(string.len(), 10);
+}
+```
+
+
+This expands to the following, with no further macro magic
+
+```rust
+fn my_test_harness<F>(test: impl FnOnce(String)) {
+    let string = std::iter::repeat_with(fastrand::alphanumeric).take(10).collect();
+    test(string)
+}
+
+#[test]
+fn my_test() -> impl std::process::Termination {
+    fn my_test(random_string: String) -> Result<(), &'static str> {
+        assert_eq!(string.len(), 10);
+        Ok(())
+    }
+    my_test_harness(my_test)
+}
+```
+
+## Returning Result
+```rust
+use test_harness::test;
+
+fn my_test_harness<F>(test: F) -> Result<(), &'static str>
 where F: FnOnce(String) -> Result<(), &'static str> {
     let string = std::iter::repeat_with(fastrand::alphanumeric).take(10).collect();
-    test(string).expect("test success");
+    test(string)
 }
 
 #[test(harness = my_test_harness)]
@@ -26,21 +60,22 @@ fn my_test(random_string: String) -> Result<(), &'static str> {
 This expands to the following, with no further macro magic
 
 ```rust
-fn my_test_harness<F>(test: F)
+fn my_test_harness<F>(test: F) -> Result<(), &'static str>
 where F: FnOnce(String) -> Result<(), &'static str> {
     let string = std::iter::repeat_with(fastrand::alphanumeric).take(10).collect();
-    test(string).expect("test success");
+    test(string)
 }
 
 #[test]
-fn my_test() {
+fn my_test() -> impl std::process::Termination {
     fn my_test(random_string: String) -> Result<(), &'static str> {
         assert_eq!(string.len(), 10);
         Ok(())
     }
-    my_test_harness(my_test);
+    my_test_harness(my_test)
 }
 ```
+
 
 ## Async example
 
@@ -50,12 +85,12 @@ You can use this to set up an async runtime and spawn or block on the test.
 use test_harness::test;
 
 mod my_mod {
-    pub fn set_up<F, Fut>(test: F)
+    pub fn set_up<F, Fut>(test: F) -> Result<(), Box<dyn std::error::Error>>
     where
         F: FnOnce(&'static str) -> Fut,
         Fut: std::future::Future<Output = Result<(), Box<dyn std::error::Error>>> + Send + 'static,
     {
-        futures_lite::future::block_on(test("hello")).unwrap()
+        futures_lite::future::block_on(test("hello"))
     }
 }
 
@@ -65,6 +100,40 @@ async fn my_test(s: &'static str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+
+# Eliding harness name
+
+If you name your harness `harness`, you can elide the harness name, like so:
+
+```rust
+use test_harness::test;
+
+pub fn harness<F, Fut, Out>(test: F) -> Out
+where
+    F: FnOnce(&'static str) -> Fut,
+    Fut: std::future::Future<Output = Out> + Send + 'static,
+    Out: std::process::Termination
+{
+    futures_lite::future::block_on(test("hello"))
+}
+
+
+#[test(harness)]
+async fn test_one(s: &'static str) -> Result<(), Box<dyn std::error::Error>> {
+    assert_eq!(s, "hello");
+    Ok(())
+}
+
+#[test(harness)]
+async fn test_two(s: &'static str) {
+    assert_eq!(s, "hello");
+}
+
+```
+
+
+
 
 # Drop down to standard #[test]
 
@@ -77,3 +146,4 @@ fn normal_test() {
     assert!(true);
 }
 ```
+
