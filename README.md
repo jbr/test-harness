@@ -102,7 +102,7 @@ async fn my_test(s: &'static str) -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 
-# Eliding harness name
+## Eliding harness name
 
 If you name your harness `harness`, you can elide the harness name, like so:
 
@@ -135,7 +135,7 @@ async fn test_two(s: &'static str) {
 
 
 
-# Drop down to standard #[test]
+## Drop down to standard #[test]
 
 If this macro is used without any additional arguments, it works identically to the built-in `#[test]` macro.
 
