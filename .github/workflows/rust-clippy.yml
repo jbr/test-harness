@@ -42,7 +42,7 @@ jobs:
           override: true
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.7.2
+        uses: Swatinem/rust-cache@v2.7.3
 
       - name: Install required cargo
         run: cargo install clippy-sarif sarif-fmt
