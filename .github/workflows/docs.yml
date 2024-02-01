@@ -14,10 +14,6 @@ jobs:
     name: build rustdocs and put them on github pages
     runs-on: ubuntu-latest
     steps:
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/checkout@master
     - uses: actions-rs/toolchain@v1
       with:
@@ -32,6 +28,11 @@ jobs:
         cargo +nightly doc
         --no-deps
         --all
+    - name: Fix permissions
+      run: |
+        chmod -c -R +rX "./target/doc" | while read line; do
+        echo "::warning title=Invalid file permissions automatically fixed::$line"
+        done
     - name: Setup Pages
       uses: actions/configure-pages@v4
     - name: Upload artifact
