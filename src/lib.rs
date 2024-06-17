@@ -11,10 +11,13 @@
 #![allow(clippy::must_use_candidate, clippy::module_name_repetitions)]
 #![doc = include_str!("../README.md")]
 use proc_macro::TokenStream;
-use quote::quote;
+use proc_macro2::TokenStream as TokenStream2;
+use quote::{quote, TokenStreamExt};
 use syn::{
     parse::{Parse, ParseStream},
-    parse_macro_input, ExprPath, ItemFn, Path, Token,
+    parse_macro_input,
+    token::Eq,
+    AttrStyle, ExprPath, ItemFn, Path, Token,
 };
 
 struct Args {
@@ -33,7 +36,7 @@ impl Parse for Args {
                 "we only recognize #[test(harness = some::path)], #[test(harness)], and #[test]",
             ))
         } else if input.peek(Token![=]) {
-            let syn::token::Eq { .. } = input.parse()?;
+            let Eq { .. } = input.parse()?;
             let ExprPath { path, .. } = input.parse()?;
             Ok(Self {
                 harness: Some(path),
@@ -58,7 +61,7 @@ pub fn test(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 fn without_harness(input: TokenStream) -> TokenStream {
-    let input = proc_macro2::TokenStream::from(input);
+    let input = TokenStream2::from(input);
     quote! {
         #[::core::prelude::v1::test]
         #input
@@ -67,14 +70,37 @@ fn without_harness(input: TokenStream) -> TokenStream {
 }
 
 fn with_harness(harness: Path, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as ItemFn);
-    #[allow(clippy::redundant_clone)] // clippy bug
-    let fn_name = input.sig.ident.clone();
+    let ItemFn {
+        attrs,
+        sig,
+        block,
+        vis,
+    } = parse_macro_input!(input as ItemFn);
+
+    let mut outer = TokenStream2::new();
+    outer.append_all(attrs.iter().filter(|attr| attr.style == AttrStyle::Outer));
+
+    let mut inner = TokenStream2::new();
+    inner.append_all(
+        attrs
+            .iter()
+            .filter(|attr| matches!(attr.style, AttrStyle::Inner(_))),
+    );
+
+    let ident = &sig.ident;
+    let output = if attrs.iter().any(|x| x.meta.path().is_ident("should_panic")) {
+        quote!()
+    } else {
+        quote!(-> impl ::std::process::Termination)
+    };
+
     quote! {
         #[::core::prelude::v1::test]
-        fn #fn_name() -> impl ::std::process::Termination {
-            #input
-            #harness(#fn_name)
+        #outer
+        #vis fn #ident() #output {
+            #inner
+            #sig #block
+            #harness(#ident)
         }
     }
     .into()
