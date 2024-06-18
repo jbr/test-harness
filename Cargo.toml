@@ -1,6 +1,6 @@
 [package]
 name = "test-harness"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Jacob Rothstein <hi@jbr.me>"]
 description = "a little test macro to wrap your tests with an arbitrary setup/teardown function"
