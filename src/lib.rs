@@ -78,7 +78,11 @@ fn with_harness(harness: Path, input: TokenStream) -> TokenStream {
     } = parse_macro_input!(input as ItemFn);
 
     let mut outer = TokenStream2::new();
-    outer.append_all(attrs.iter().filter(|attr| attr.style == AttrStyle::Outer));
+    outer.append_all(
+        attrs
+            .iter()
+            .filter(|attr| matches!(attr.style, AttrStyle::Outer)),
+    );
 
     let mut inner = TokenStream2::new();
     inner.append_all(
