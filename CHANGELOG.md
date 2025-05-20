@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/jbr/test-harness/compare/v0.3.0...v0.3.1) - 2025-05-20
+
+### Other
+
+- cache convco
+- *(deps)* bump Swatinem/rust-cache from 2.7.3 to 2.7.7
+- *(deps)* update deps
+
 ## [0.3.0](https://github.com/jbr/test-harness/compare/v0.2.0...v0.3.0) - 2024-06-18
 
 ### Added
