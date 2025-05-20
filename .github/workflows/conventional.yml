@@ -1,6 +1,10 @@
 name: Conventional Commit Check
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   conventional_commits:
@@ -15,5 +19,6 @@ jobs:
         with:
           tool: convco
       - name: Check commit format
+        if: github.event_name == 'pull_request'
         run: convco check "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
 
