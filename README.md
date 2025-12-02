@@ -90,7 +90,7 @@ mod my_mod {
         F: FnOnce(&'static str) -> Fut,
         Fut: std::future::Future<Output = Result<(), Box<dyn std::error::Error>>> + Send + 'static,
     {
-        futures_lite::future::block_on(test("hello"))
+        pollster::block_on(test("hello"))
     }
 }
 
@@ -115,7 +115,7 @@ where
     Fut: std::future::Future<Output = Out> + Send + 'static,
     Out: std::process::Termination
 {
-    futures_lite::future::block_on(test("hello"))
+    pollster::block_on(test("hello"))
 }
 
 
